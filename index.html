@@ -57,6 +57,11 @@ function publishSampleMessages() {
 <ol>
     <li>
         The backend is running on <code>http://localhost:8080</code>.
+        It is configured with appropriate aws credentials in <code>src/main/resources/application.properties</code>.
+    </li>
+    <li>
+        The configured AWS keys have the permissions to create queues in AWS SQS, to publish messages to SQS,
+        and to issue temporary security tokens using AWS STS and to create AWS IAM policies.
     </li>
     <li>
         This index.html file is opened in the browser :-)
