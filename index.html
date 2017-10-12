@@ -1,0 +1,83 @@
+<html>
+<head>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.18.min.js"></script>
+    <script type="text/javascript">
+function configure(queueAndToken) {
+    console.log("Configuring AWS client based on received credentials.");
+    AWS.config.credentials = {
+        "accessKeyId": queueAndToken.credentials.accessKeyId,
+        "secretAccessKey": queueAndToken.credentials.secretAccessKey,
+        "sessionToken": queueAndToken.credentials.sessionToken
+    };
+    AWS.config.region = 'us-east-1';
+    queueUrl = queueAndToken.queueUrl;
+}
+
+function httpGetAsync(theUrl, callback) {
+    console.log("Processing GET request");
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(JSON.parse(xmlHttp.response));
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous
+    xmlHttp.send(null);
+}
+
+function queryQueue() {
+    console.log("querying queue with temporary credentials");
+    var params = {
+      QueueUrl: queueUrl,
+      AttributeNames: [ 'All' ],
+      MaxNumberOfMessages: 10,
+      MessageAttributeNames: [ ],
+      VisibilityTimeout: 0,
+      WaitTimeSeconds: 0
+    };
+    var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
+    sqs.receiveMessage(params, function(err, data) {
+      if (err) console.log(err, err.stack); // an error occurred
+      else     console.log(data);           // successful response
+    });
+}
+
+function requestQueueAndToken() {
+    httpGetAsync("http://localhost:8080/queue", configure);
+}
+
+function publishSampleMessages() {
+    httpGetAsync("http://localhost:8080/messages/publish?queueUrl=" + JSON.stringify(queueUrl), console.log);
+}
+</script>
+</head>
+<body>
+<h3>Demo for using AWS SQS as a message broker for browser based applications.</h3>
+
+<h4>Prerequisites</h4>
+<ol>
+    <li>
+        The backend is running on <code>http://localhost:8080</code>.
+    </li>
+    <li>
+        This index.html file is opened in the browser :-)
+    </li>
+</ol>
+
+<h4>Trying the demo.</h4>
+
+<ol>
+    <li>Open the javascript console of your browser</li>
+    <li>Enter <code>requestQueueAndToken()</code> to request the backend to create a new AWS STS queue
+        and custom credentials for the browser to access the queue.
+        This will set the fields in <code>AWS.config.credentials</code>.
+    </li>
+    <li>Enter <code>publishSampleMessages()</code> to request the backend to publish sample messages.
+        The backend will put some sample messages on the SQS queue which will be read by the browser in the next step.
+    </li>
+    <li>
+        Enter <code>queryQueue()</code> to receive the messages from the STS queue which were sent by the backend.
+        Notice that nobody else can read these messages.
+    </li>
+</ol>
+</body>
+</html>

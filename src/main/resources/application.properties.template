@@ -1,0 +1,3 @@
+cloud.aws.region.static=<your_aws_region>
+awsKey=<your_aws_key>
+awsSecretKey=<your_aws_secret_key>
